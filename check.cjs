@@ -1,0 +1,7 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const nodes={};const node=s=>nodes[s]??=( {innerHTML:'',value:'',textContent:'',classList:{add(){},remove(){}},focus(){}});
+const saved={};const ctx={document:{querySelector:node,querySelectorAll:()=>[],documentElement:{}},localStorage:{getItem:k=>saved[k],setItem:(k,v)=>saved[k]=v,removeItem:k=>delete saved[k]},setTimeout:()=>{},console};vm.createContext(ctx);vm.runInContext(fs.readFileSync('dist/app.js','utf8'),ctx);
+for(const p of ['home','depths','recommend','action','records','device']){vm.runInContext(`go('${p}')`,ctx);assert(node('#screen').innerHTML.length>100,p)}
+vm.runInContext("fault=true;go('recommend')",ctx);assert(node('#screen').innerHTML.includes('추천을 보류'));assert(!node('#screen').innerHTML.includes('작업할게요'));
+vm.runInContext("fault=false;go('action')",ctx);node('#length').value='0.5';node('#memo').value='<test>';node('#complete').onclick();assert(node('#screen').innerHTML.includes('2~4.5m'));assert(node('#screen').innerHTML.includes('&lt;test&gt;'));assert(node('#ocean').innerHTML.includes('조절 후 2~4.5m'));assert(saved['blue-shelter-record']);
+node('#reset').onclick();assert(node('#screen').innerHTML.includes('우리 양식장'));assert(!saved['blue-shelter-record']);console.log('PASS: 6 screens, recommendation hold, action save, safe rendering, depth update, reset');
